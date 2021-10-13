@@ -34,7 +34,7 @@ export default () => {
       case 'finished': {
         console.log('finished');
         const pList = document.querySelectorAll('.feedback');
-        pList.map((p) => p.remove());
+        pList.forEach((p) => p.remove());
 
         if (watcherState.addingProcess.validationState === 'invalid') {
           console.log('invalid');
