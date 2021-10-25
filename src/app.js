@@ -1,9 +1,12 @@
 import onChange from 'on-change';
-import * as yup from 'yup';
 import i18next from 'i18next';
 import { setLocale } from 'yup';
 import ru from './locale/ru.js';
 import * as view from './view.js';
+
+import loadDataFromUrl from './loadRSS.js';
+import parse from './parser.js';
+import validateUrl from './validation';
 
 export default () => {
   const i18nextInstance = i18next.createInstance();
@@ -17,15 +20,16 @@ export default () => {
   }).then(() => {
     setLocale({
       mixed: {
-        notOneOf: () => ({ key: 'errors.url_exist' }),
+        notOneOf: () => 'errors.url_exist',
       },
       string: {
-        url: () => ({ key: 'errors.format_url_invalid' }),
+        url: () => 'errors.format_url_invalid',
       },
     });
 
     const state = {
-      links: [],
+      feeds: [],
+      posts: [],
       addingProcess: {
         state: 'filling',
         error: null,
@@ -69,21 +73,30 @@ export default () => {
 
     elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
-      const inputValue = elements.input.value;
 
-      const schema = yup.string().url().notOneOf(watcherState.links);
-      schema.validate(inputValue)
-        .then((link) => {
-          watcherState.addingProcess.state = 'processing';
-          watcherState.links = [...watcherState.links, link];
+      watcherState.addingProcess.state = 'processing';
+      const inputUrl = elements.input.value;
+
+      validateUrl(inputUrl, state.feeds)
+        .then((url) => loadDataFromUrl(url))
+        .then((response) => parse(response))
+        .then((data) => {
+          watcherState.feeds = [...watcherState.feeds, inputUrl];
           watcherState.addingProcess.validationState = 'valid';
-          watcherState.addingProcess.state = 'processed';
-          watcherState.addingProcess.state = 'filling';
+
+          console.log(data);
         })
         .catch((error) => {
-          watcherState.addingProcess.state = 'processing';
-          watcherState.addingProcess.error = error.message;
+          if (error.name === 'RSSFormatError') {
+            watcherState.addingProcess.error = 'errors.rss_invalid';
+          } else {
+            watcherState.addingProcess.error = error.message;
+          }
+
           watcherState.addingProcess.validationState = 'invalid';
+        })
+        .finally(() => {
+          console.log('Все равно выполнить!');
           watcherState.addingProcess.state = 'processed';
           watcherState.addingProcess.state = 'filling';
         });

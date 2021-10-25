@@ -30,7 +30,8 @@ const renderError = (i18next, state, elements) => {
 
   feedback.classList.replace('text-success', 'text-danger');
   input.classList.add('is-invalid');
-  feedback.textContent = i18next.t(state.addingProcess.error.key);
+  console.log(state.addingProcess.error.key);
+  feedback.textContent = i18next.t(state.addingProcess.error);
 };
 
 export {
