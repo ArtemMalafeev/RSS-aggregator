@@ -4,8 +4,6 @@ import { setLocale } from 'yup';
 import _ from 'lodash';
 import ru from './locale/ru.js';
 import * as view from './view.js';
-import runTimer from "./timer";
-
 import loadDataFromUrl from './loadRSS.js';
 import parse from './parser.js';
 import validateUrl from './validation';
@@ -38,7 +36,7 @@ export default () => {
       data: {
         feeds: [],
         posts: [],
-      }
+      },
     };
 
     const elements = {
@@ -82,26 +80,25 @@ export default () => {
     elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
       watcherState.addingProcess.state = 'processing';
-      
+
       const inputUrl = elements.input.value;
       const currentUrls = watcherState.data.feeds.map((feed) => feed.RSSlink);
-      
+
       validateUrl(inputUrl, currentUrls)
         .then((url) => loadDataFromUrl(url))
         .then((response) => parse(response))
         .then(({
-                 title, description, link, postsData,
-               }) => {
-          
+          title, description, link, postsData,
+        }) => {
           const id = _.uniqueId();
 
           watcherState.data.feeds.push({
             id, title, description, link, RSSlink: inputUrl,
           });
 
-          postsData.forEach(({ title, link }) => {
+          postsData.forEach((post) => {
             watcherState.data.posts.push({
-              idFeed: id, id: _.uniqueId(), title, link,
+              idFeed: id, id: _.uniqueId(), title: post.title, link: post.link,
             });
           });
 
