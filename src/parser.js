@@ -1,6 +1,6 @@
 const RSSFormatError = (data) => {
   const error = new Error(data);
-  error.message = 'Ссылка rss содержит недопустимый формат';
+  error.message = 'Ресурс не содержит валидный RSS';
   error.name = 'RSSFormatError';
 
   throw error;

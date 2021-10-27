@@ -1,8 +1,10 @@
 import onChange from 'on-change';
 import i18next from 'i18next';
 import { setLocale } from 'yup';
+import _ from 'lodash';
 import ru from './locale/ru.js';
 import * as view from './view.js';
+import runTimer from "./timer";
 
 import loadDataFromUrl from './loadRSS.js';
 import parse from './parser.js';
@@ -28,13 +30,15 @@ export default () => {
     });
 
     const state = {
-      feeds: [],
-      posts: [],
       addingProcess: {
         state: 'filling',
         error: null,
         validationState: 'valid',
       },
+      data: {
+        feeds: [],
+        posts: [],
+      }
     };
 
     const elements = {
@@ -42,6 +46,8 @@ export default () => {
       input: document.querySelector('#url-input'),
       form: document.querySelector('.rss-form'),
       feedback: document.querySelector('.feedback'),
+      feeds: document.querySelector('.feeds'),
+      posts: document.querySelector('.posts'),
     };
 
     const watcherState = onChange(state, () => {
@@ -57,6 +63,8 @@ export default () => {
         case 'processed': {
           if (state.addingProcess.validationState === 'valid') {
             view.renderSuccess(i18nextInstance, elements);
+            view.renderFeeds(i18nextInstance, state, elements);
+            view.renderPosts(i18nextInstance, state, elements);
             view.clearForm(elements);
           } else {
             view.renderError(i18nextInstance, state, elements);
@@ -73,18 +81,31 @@ export default () => {
 
     elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
-
       watcherState.addingProcess.state = 'processing';
+      
       const inputUrl = elements.input.value;
-
-      validateUrl(inputUrl, state.feeds)
+      const currentUrls = watcherState.data.feeds.map((feed) => feed.RSSlink);
+      
+      validateUrl(inputUrl, currentUrls)
         .then((url) => loadDataFromUrl(url))
         .then((response) => parse(response))
-        .then((data) => {
-          watcherState.feeds = [...watcherState.feeds, inputUrl];
-          watcherState.addingProcess.validationState = 'valid';
+        .then(({
+                 title, description, link, postsData,
+               }) => {
+          
+          const id = _.uniqueId();
 
-          console.log(data);
+          watcherState.data.feeds.push({
+            id, title, description, link, RSSlink: inputUrl,
+          });
+
+          postsData.forEach(({ title, link }) => {
+            watcherState.data.posts.push({
+              idFeed: id, id: _.uniqueId(), title, link,
+            });
+          });
+
+          watcherState.addingProcess.validationState = 'valid';
         })
         .catch((error) => {
           if (error.name === 'RSSFormatError') {
@@ -96,7 +117,7 @@ export default () => {
           watcherState.addingProcess.validationState = 'invalid';
         })
         .finally(() => {
-          console.log('Все равно выполнить!');
+          // runTimer();
           watcherState.addingProcess.state = 'processed';
           watcherState.addingProcess.state = 'filling';
         });
