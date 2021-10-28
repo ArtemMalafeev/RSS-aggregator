@@ -81,16 +81,16 @@ export default () => {
         }
       }
     });
-    
+
     elements.posts.addEventListener('click', (event) => {
-      const tagName = event.target.tagName;
-      
+      const { tagName } = event.target;
+
       if (tagName === 'BUTTON' || tagName === 'A') {
         const postId = event.target.dataset.id;
-        
+
         watcherState.uiState.readPostsId.add(postId);
         watcherState.uiState.selectedPostId = postId;
-        
+
         view.renderPosts(i18nextInstance, state, elements);
         view.renderModal(state, elements);
       }
@@ -115,8 +115,12 @@ export default () => {
             id, title, description, link, RSSlink: inputUrl,
           });
 
-          const newPosts = postsData.map(({ title, link, description }) => ({
-            idFeed: id, id: _.uniqueId(), title, link, description
+          const newPosts = postsData.map((post) => ({
+            idFeed: id,
+            id: _.uniqueId(),
+            title: post.title,
+            link: post.link,
+            description: post.description,
           }));
 
           watcherState.data.posts = [

@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 const unlockForm = ({ button, input }) => {
   button.disabled = false;
   input.disabled = false;
@@ -116,7 +118,6 @@ const renderPosts = (i18next, state, { posts }) => {
 
 const renderModal = (state, { modal }) => {
   const post = _.find(state.data.posts, { id: state.uiState.selectedPostId });
-  
   modal.querySelector('.modal-title').textContent = post.title;
   modal.querySelector('.modal-body').textContent = post.description;
   modal.querySelector('a').href = post.link;
