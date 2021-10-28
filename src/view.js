@@ -1,6 +1,4 @@
-const unlockForm = (elements) => {
-  const { button, input } = elements;
-
+const unlockForm = ({ button, input }) => {
   button.disabled = false;
   input.disabled = false;
   input.focus();
@@ -10,23 +8,18 @@ const clearForm = ({ form }) => {
   form.reset();
 };
 
-const blockForm = (elements) => {
-  const { button, input } = elements;
-
+const blockForm = ({ button, input }) => {
   button.disabled = true;
   input.disabled = true;
 };
 
-const renderSuccess = (i18next, elements) => {
-  const { feedback, input } = elements;
-
+const renderSuccess = (i18next, { feedback, input }) => {
   feedback.classList.replace('text-danger', 'text-success');
-  input.classList.remove('is-invalid');
   feedback.textContent = i18next.t('successfully');
+  input.classList.remove('is-invalid');
 };
 
-const renderFeeds = (i18next, state, elements) => {
-  const { feeds } = elements;
+const renderFeeds = (i18next, state, { feeds }) => {
   feeds.innerHTML = '';
 
   const card = document.createElement('div');
@@ -66,9 +59,7 @@ const renderFeeds = (i18next, state, elements) => {
   feeds.append(card, list);
 };
 
-const renderPosts = (i18next, state, elements) => {
-  const { posts } = elements;
-
+const renderPosts = (i18next, state, { posts }) => {
   posts.innerHTML = '';
 
   const card = document.createElement('div');
@@ -90,19 +81,25 @@ const renderPosts = (i18next, state, elements) => {
       'align-items-start', 'border-0', 'border-end-0');
 
     const link = document.createElement('a');
-    link.setAttribute('href', post.link);
+    link.href = post.link;
+
     link.classList.add('fw-bold');
-    link.setAttribute('data-id', post.id);
-    link.setAttribute('target', '_blank');
-    link.setAttribute('rel', 'noopener noreferrer');
+    if (state.uiState.readPostsId.has(post.id)) {
+      link.classList.remove('fw-bold');
+      link.classList.add('fw-normal', 'link-secondary');
+    }
+
+    link.dataset.id = post.id;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
     link.textContent = post.title;
 
     const button = document.createElement('button');
-    button.setAttribute('type', 'button');
+    button.type = 'button';
     button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-    button.setAttribute('data-id', post.id);
-    button.setAttribute('data-bs-toggle', 'modal');
-    button.setAttribute('data-bs-target', '#modal');
+    button.dataset.id = post.id;
+    button.dataset.bsToggle = 'modal';
+    button.dataset.bsTarget = '#modal';
     button.textContent = i18next.t('viewButton');
 
     element.append(link, button);
@@ -117,13 +114,18 @@ const renderPosts = (i18next, state, elements) => {
   posts.append(card, list);
 };
 
-const renderError = (i18next, state, elements) => {
-  const { feedback, input } = elements;
+const renderModal = (state, { modal }) => {
+  const post = _.find(state.data.posts, { id: state.uiState.selectedPostId });
+  
+  modal.querySelector('.modal-title').textContent = post.title;
+  modal.querySelector('.modal-body').textContent = post.description;
+  modal.querySelector('a').href = post.link;
+};
 
+const renderError = (i18next, state, { feedback, input }) => {
   feedback.classList.replace('text-success', 'text-danger');
-  input.classList.add('is-invalid');
-  console.log(state.addingProcess.error.key);
   feedback.textContent = i18next.t(state.addingProcess.error);
+  input.classList.add('is-invalid');
 };
 
 export {
@@ -134,4 +136,5 @@ export {
   renderError,
   renderFeeds,
   renderPosts,
+  renderModal,
 };

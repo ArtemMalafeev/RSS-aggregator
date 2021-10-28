@@ -37,6 +37,10 @@ export default () => {
         feeds: [],
         posts: [],
       },
+      uiState: {
+        readPostsId: new Set(),
+        selectedPostId: null,
+      },
     };
 
     const elements = {
@@ -46,6 +50,7 @@ export default () => {
       feedback: document.querySelector('.feedback'),
       feeds: document.querySelector('.feeds'),
       posts: document.querySelector('.posts'),
+      modal: document.querySelector('.modal'),
     };
 
     const watcherState = onChange(state, () => {
@@ -76,6 +81,20 @@ export default () => {
         }
       }
     });
+    
+    elements.posts.addEventListener('click', (event) => {
+      const tagName = event.target.tagName;
+      
+      if (tagName === 'BUTTON' || tagName === 'A') {
+        const postId = event.target.dataset.id;
+        
+        watcherState.uiState.readPostsId.add(postId);
+        watcherState.uiState.selectedPostId = postId;
+        
+        view.renderPosts(i18nextInstance, state, elements);
+        view.renderModal(state, elements);
+      }
+    });
 
     elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -96,11 +115,14 @@ export default () => {
             id, title, description, link, RSSlink: inputUrl,
           });
 
-          postsData.forEach((post) => {
-            watcherState.data.posts.push({
-              idFeed: id, id: _.uniqueId(), title: post.title, link: post.link,
-            });
-          });
+          const newPosts = postsData.map(({ title, link, description }) => ({
+            idFeed: id, id: _.uniqueId(), title, link, description
+          }));
+
+          watcherState.data.posts = [
+            ...newPosts,
+            ...watcherState.data.posts,
+          ];
 
           watcherState.addingProcess.validationState = 'valid';
         })
@@ -114,7 +136,6 @@ export default () => {
           watcherState.addingProcess.validationState = 'invalid';
         })
         .finally(() => {
-          // runTimer();
           watcherState.addingProcess.state = 'processed';
           watcherState.addingProcess.state = 'filling';
         });

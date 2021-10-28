@@ -8,9 +8,10 @@ const RSSFormatError = (data) => {
 
 const parsePost = (post) => {
   const title = post.querySelector('title').textContent;
+  const description = post.querySelector('description').textContent;
   const link = post.querySelector('link').textContent;
 
-  return { title, link };
+  return { title, link, description };
 };
 
 export default (data) => {
